@@ -148,6 +148,8 @@ Then you can slice by:
 
 ---
 
+# Core Evaluation Concepts and Metrics
+
 ## 1) What is evaluation-driven development (EDD) for AI applications?
 
 Evaluation-driven development is building AI features the same way you’d build reliable software: you write/maintain an evaluation suite first (or alongside the feature), and you treat changes to prompts/models/retrievers/tools as “code changes” that must pass tests before shipping.
@@ -316,6 +318,10 @@ When to use:
 - If you care about “did it include the same key words/phrases as reference?” → ROUGE.
 - If you care about “is the translation close to reference phrasing?” → BLEU.
 - If you care about “is it correct / safe / grounded / useful?” → use rubrics + task success + groundedness checks, and treat BLEU/ROUGE/BERTScore as secondary signals.
+
+---
+
+# LLM-as-a-Judge and Human Evaluation
 
 ## 1) What is G-Eval, and how does it use LLMs for evaluation?
 
@@ -498,6 +504,10 @@ This can be done with:
     - by latency/context length.
 
 Practical note: hallucinations often spike when retrieval fails (no relevant docs) or when prompts reward confident completeness. So you usually improve hallucination rates by improving retrieval coverage, enforcing “answer only from sources,” and adding abstention/clarification behavior.
+
+---
+
+# Adversarial Testing, Regression Suites, and Benchmarks
 
 ## 1) What is adversarial testing for AI systems?
 
@@ -749,6 +759,10 @@ Operational best practice:
 - Track factuality separately from fluency/helpfulness; fluent wrong answers are the most dangerous.
 - Include “no-answer” cases and penalize guessing heavily to encourage abstention when evidence is missing.
 
+---
+
+# Multi-turn, Continuous, and Production Evaluation
+
 ## 1) Evaluating multi-turn conversation quality
 
 Multi-turn eval is less about “is this answer good?” and more about “does the assistant steer the whole interaction to a good outcome without losing the plot?”
@@ -789,7 +803,7 @@ Practical way to run this:
 - Build a conversation eval set with full transcripts (multi-turn scenarios), not single prompts. Include: ambiguous starts, user corrections, changing constraints mid-way, and “no-answer” situations.
 - Score end-to-end with a rubric and a few deterministic checks (e.g., must ask a clarifying question if missing a required field; must abstain if evidence missing).
 
-This aligns with “end-to-end task success” + unit/integration/system style testing adapted to AI.[[1]](https://www.notion.so/AI-evaluation-frameworks-common-ways-teams-structure-evals-32d88a4b53af8099b73ceffe59828e61?pvs=21)
+This aligns with “end-to-end task success” + unit/integration/system style testing adapted to AI.
 
 ## 2) Role of golden datasets in AI evaluation
 
@@ -798,7 +812,7 @@ A “golden dataset” (golden set) is your stable, versioned benchmark that you
 What it’s for:
 
 - Regression detection: “Did we break anything?” after changing prompts/models/retrieval/tools.
-- Release gating: hard constraints must pass (safety, formatting/tool correctness), and key quality metrics shouldn’t drop beyond a threshold.[[1]](https://www.notion.so/AI-evaluation-frameworks-common-ways-teams-structure-evals-32d88a4b53af8099b73ceffe59828e61?pvs=21)
+- Release gating: hard constraints must pass (safety, formatting/tool correctness), and key quality metrics shouldn’t drop beyond a threshold.
 - Comparable trending: because it’s fixed, you can compare results across weeks/months and across variants.
 
 What to include (to make it high-signal, not just big):
@@ -808,7 +822,7 @@ What to include (to make it high-signal, not just big):
 - “No-answer / insufficient evidence” cases to penalize guessing
 - Adversarial/prompt-injection cases (especially for RAG and agents)
 
-This matches the “golden set + regression testing” and risk-based evaluation approach.[[1]](https://www.notion.so/AI-evaluation-frameworks-common-ways-teams-structure-evals-32d88a4b53af8099b73ceffe59828e61?pvs=21)
+This matches the “golden set + regression testing” and risk-based evaluation approach.
 
 How it differs from a “live set”:
 
@@ -821,7 +835,7 @@ A workable continuous eval loop usually has 4 layers:
 
 1) Instrumentation + logging (always-on)  
 
-Log: user request, full conversation, retrieved docs (or doc IDs), tool calls + tool outputs, latency, cost, and final response. You need this to debug and to label later.[[1]](https://www.notion.so/AI-evaluation-frameworks-common-ways-teams-structure-evals-32d88a4b53af8099b73ceffe59828e61?pvs=21)
+Log: user request, full conversation, retrieved docs (or doc IDs), tool calls + tool outputs, latency, cost, and final response. You need this to debug and to label later.
 
 2) Online monitoring (near real-time)  
 
@@ -830,20 +844,24 @@ Track:
 - Task success proxies (thumbs up/down, follow-up rate, rephrase rate, abandonment)
 - Safety/guardrail metrics (policy flags, refusal rates, injection detection)
 - Ops metrics (p50/p95 latency, tool error rate, token/cost)
-- RAG-specific: retrieval hit rate, top-k evidence presence, citation coverage (if applicable)[[1]](https://www.notion.so/AI-evaluation-frameworks-common-ways-teams-structure-evals-32d88a4b53af8099b73ceffe59828e61?pvs=21)
+- RAG-specific: retrieval hit rate, top-k evidence presence, citation coverage (if applicable)
 
 3) Continuous sampling + labeling  
 
 - Sample conversations for review (risk-based sampling: sensitive topics, low-confidence, retrieval-miss, high-impact actions).
-- Use a rubric; optionally scale with LLM-as-judge, but calibrate with periodic human audits.[[1]](https://www.notion.so/AI-evaluation-frameworks-common-ways-teams-structure-evals-32d88a4b53af8099b73ceffe59828e61?pvs=21)
+- Use a rubric; optionally scale with LLM-as-judge, but calibrate with periodic human audits.
 
 4) Automated regression + promotion workflow (CI for AI)  
 
 - Nightly (or per-change) run your golden set + a fresh “live” set slice.
 - Enforce hard gates (safety, schema/tool constraints, “don’t guess”) and soft gates (quality score must not regress).
-- When production finds a new failure mode, add it to the golden set so it can’t come back.[[1]](https://www.notion.so/AI-evaluation-frameworks-common-ways-teams-structure-evals-32d88a4b53af8099b73ceffe59828e61?pvs=21)
+- When production finds a new failure mode, add it to the golden set so it can’t come back.
 
-That’s essentially evaluation-driven development (EDD): treat prompts/models/retrievers/tool policies like code changes that must pass tests before shipping.[[1]](https://www.notion.so/AI-evaluation-frameworks-common-ways-teams-structure-evals-32d88a4b53af8099b73ceffe59828e61?pvs=21)
+That’s essentially evaluation-driven development (EDD): treat prompts/models/retrievers/tool policies like code changes that must pass tests before shipping.
+
+---
+
+# Bias, Fairness, and Statistical Rigor
 
 ## 1) How to evaluate bias in AI model outputs
 
@@ -961,6 +979,10 @@ A practical implementation:
 - Start with a small golden set of canonical items.
 - Generate N variants per item (human-written or synthetic), label them with the same rubric, and compute “worst-case” and “average-case” performance.
 - Every production incident becomes a new robustness test (regression).
+
+---
+
+# Building and Scaling Evaluation Frameworks
 
 ## 1) Key differences: evaluating traditional ML vs LLM applications
 
@@ -1089,9 +1111,7 @@ Document:
 - what worsened (and by how much) when you improved the other metric
 - residual risk and monitoring plan in production
 
-Got it — in that case, the most helpful thing is to practice “interview-ready” answers: tight structure, clear tradeoffs, and a concrete example.
-
-Here are 3 reusable answer templates you can use for almost any of these evaluation questions.
+# Interview Preparation
 
 ### 1) Fair at deployment → biased 6 months later: how to monitor continuously?
 
@@ -1227,8 +1247,6 @@ For multimodal, the key is: the *attack can be in the image/audio*, not the text
 - Provenance labeling: tag content as user-provided vs retrieved vs system; enforce different trust levels.
 - Watermark/canary tests: plant known secrets in images and verify they never leak.
 
-If you want interview-style delivery: I can condense each of these into a 60–90 second spoken answer with a concrete example (RAG chatbot with tools, or a multimodal doc-understanding assistant).
-
 ## 1) A strong default structure (60–90 seconds)
 
 1. Define the goal (what does “good” mean for this product?)
@@ -1256,12 +1274,6 @@ This sounds “senior” because it’s product-oriented and operational, not ju
     - 1 concrete example (e.g., “RAG assistant for policies” or “tool-using agent”)
 - Time yourself to 60–90 seconds.
 - Add 1 tradeoff line (e.g., “calibration vs equalized odds can conflict; we pick based on harm”).
-
-If you want, send me any one of the interview questions you listed earlier and I’ll:
-
-- give you a “model answer” (what a strong candidate says),
-- then a shorter version,
-- then 2–3 follow-up questions an interviewer might ask and how to handle them.
 
 ---
 
